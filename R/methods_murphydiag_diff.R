@@ -62,7 +62,7 @@ plot.murphydiag_diff <- function(x, thresholds = 500L,
                                  ...) {
   
   stopifnot(is.null(level_ci) | (level_ci > 0 & level_ci < 1), 
-            is.null(sd_lags) | (sd_lags %in% 0:length(x)))
+            is.null(sd_lags) | (sd_lags %in% 0:nrow(x$x)))
   
   m <- x
   class(m) <- "murphydiag"
