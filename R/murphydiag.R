@@ -58,13 +58,38 @@ murphydiag.default <- function(object, y, type, level = NULL, xnames = NULL, ...
             identical(dim(rval$x)[1L], length(y)),
             identical(length(rval$functional$type), 1L))
   
+  stopifnot(!anyNA(x),
+            !anyNA(y))
+  
+  if (rval$functional$type == "prob") {
+    stopifnot(all(x >= 0 & x <= 1),
+              all(y == 0 | y == 1))
+  }
+  
   if (rval$functional$type %in% c("quantile", "expectile")) {
     rval$functional$level <- as.numeric(level)
     
     with(rval$functional,
          stopifnot(identical(length(level), 1L),
                    level > 0 && level < 1))
+    
+    if (identical(rval$functional$level, 0.5)) {
+      if (rval$functional$type == "quantile")
+        rval$functional <- list(type = "median")
+      else
+        rval$functional <- list(type = "mean")
+    }
   }
+  
+  rval$md_fun <- switch(
+    rval$functional$type,
+    mean = lapply(rval$x, md_mean, rval$y),
+    prob = lapply(rval$x, md_prob, rval$y),
+    median = lapply(rval$x, md_median, rval$y),
+    quantile = lapply(rval$x, md_quant, rval$y, rval$functional$level),
+    expectile = lapply(rval$x, md_expect, rval$y, rval$functional$level),
+    stop(sprintf("unknown functional type: '%s'", rval$functional$type))
+  )
   
   class(rval) <- "murphydiag"
   rval
